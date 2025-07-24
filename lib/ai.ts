@@ -1,10 +1,13 @@
-import { openai } from '@ai-sdk/openai'
+import { createOpenAI } from '@ai-sdk/openai'
 
-// Configure OpenRouter as OpenAI-compatible provider
-export const aiModel = openai(process.env.DEFAULT_MODEL || 'anthropic/claude-3-5-sonnet-20241022', {
+// Create OpenRouter client using OpenAI-compatible interface
+const openrouter = createOpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
   apiKey: process.env.OPENROUTER_API_KEY,
 })
+
+// Default model instance  
+export const aiModel = openrouter(process.env.DEFAULT_MODEL || 'anthropic/claude-3-5-sonnet-20241022')
 
 // Available models for selection
 export const availableModels = [
@@ -37,9 +40,5 @@ export const availableModels = [
 // Helper to create model instance
 export function createAIModel(modelId?: string) {
   const model = modelId || process.env.DEFAULT_MODEL || 'anthropic/claude-3-5-sonnet-20241022'
-  
-  return openai(model, {
-    baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY,
-  })
+  return openrouter(model)
 }

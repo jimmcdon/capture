@@ -71,6 +71,16 @@ capture/
    - `DEFAULT_MODEL` - Your preferred model (e.g., "anthropic/claude-3-5-sonnet-20241022")
 3. **Deploy** - Vercel will automatically build and deploy your app
 
+### Common Deployment Issues
+
+**"No Output Directory named 'public' found"**
+- Fixed: Project now includes a `public/` directory with required static assets
+
+**Environment Variables Not Loading**
+- Ensure all 4 environment variables are added in Vercel project settings
+- Check that variable names match exactly (case-sensitive)
+- Redeploy after adding environment variables
+
 ## Available Scripts
 
 - `npm run dev` - Start development server
