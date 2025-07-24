@@ -7,8 +7,8 @@ A personal knowledge management and thought development application built with N
 ### Prerequisites
 
 - Node.js 18+ 
-- A Vercel account with Postgres database
-- An AI API key (OpenAI, Anthropic, or other providers supported by Vercel AI SDK)
+- A Neon PostgreSQL database account
+- An OpenRouter API key (recommended) or direct provider API keys
 
 ### Setup
 
@@ -17,33 +17,29 @@ A personal knowledge management and thought development application built with N
    npm install
    ```
 
-2. **Set up Vercel Postgres:**
-   - Go to your [Vercel dashboard](https://vercel.com/dashboard)
-   - Navigate to the "Storage" tab
-   - Click "Create Database" → Select "Postgres"
-   - Choose a database name and region
-   - Connect the database to your project
+2. **Set up Neon Database:**
+   - Go to [Neon Console](https://console.neon.tech)
+   - Create a new project
+   - Copy your connection strings (pooled and direct)
 
 3. **Set up environment variables:**
-   
-   For local development, pull the environment variables from Vercel:
-   ```bash
-   vercel env pull .env.local
-   ```
-   
-   Alternatively, you can manually copy the values:
    ```bash
    cp .env.local.example .env.local
    ```
-   Then copy your database credentials from Vercel dashboard → Storage → Your Database → .env.local tab
    
-   Don't forget to add your AI provider API key to `.env.local`.
+   Edit `.env.local` and add:
+   - Your Neon database connection strings (pooled and direct)
+   - Your OpenRouter API key from [OpenRouter](https://openrouter.ai/keys)
+   
+   **Why OpenRouter?** It gives you access to 100+ AI models (GPT-4, Claude, Gemini, etc.) through one API key, often at better rates than going direct.
 
 4. **Set up the database schema:**
    ```bash
    npx prisma generate
-   npx prisma migrate dev --name init
+   npm run db:push
    ```
+   
+   Note: We use `db:push` instead of `migrate` for development with Neon to avoid migration files.
 
 5. **Run the development server:**
    ```bash
@@ -65,9 +61,22 @@ capture/
 └── tasks/           # Project documentation and task tracking
 ```
 
+## Deployment to Vercel
+
+1. **Connect your GitHub repository** to Vercel
+2. **Add environment variables** in your Vercel project settings:
+   - `POSTGRES_PRISMA_URL` - Your Neon pooled connection string
+   - `POSTGRES_URL_NON_POOLING` - Your Neon direct connection string  
+   - `OPENROUTER_API_KEY` - Your OpenRouter API key
+   - `DEFAULT_MODEL` - Your preferred model (e.g., "anthropic/claude-3-5-sonnet-20241022")
+3. **Deploy** - Vercel will automatically build and deploy your app
+
 ## Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run db:push` - Push schema changes to database
+- `npm run db:migrate` - Run database migrations
+- `npm run db:studio` - Open Prisma Studio
