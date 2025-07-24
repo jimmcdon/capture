@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET() {
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest) {
   try {
     return NextResponse.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
+      url: request.url,
       environment: {
         nodeEnv: process.env.NODE_ENV,
         hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
