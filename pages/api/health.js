@@ -1,14 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
-export async function GET(request: NextRequest) {
+export default function handler(req, res) {
   try {
-    return NextResponse.json({
+    res.status(200).json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      url: request.url,
+      method: req.method,
       environment: {
         nodeEnv: process.env.NODE_ENV,
         hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
@@ -17,9 +12,9 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    return NextResponse.json({
+    res.status(500).json({
       status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+      error: error.message
+    })
   }
 }
