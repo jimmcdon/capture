@@ -18,7 +18,7 @@ export default function ChatTest() {
     e.preventDefault()
     if (!input.trim() || isLoading) return
     
-    const userMessage = { role: 'user', content: input, id: Date.now() }
+    const userMessage: Message = { role: 'user', content: input, id: Date.now() }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
@@ -35,7 +35,7 @@ export default function ChatTest() {
       const data = await response.json()
       
       if (data.choices && data.choices[0]) {
-        const assistantMessage = {
+        const assistantMessage: Message = {
           role: 'assistant',
           content: data.choices[0].message.content,
           id: Date.now() + 1
@@ -44,7 +44,7 @@ export default function ChatTest() {
       }
     } catch (error) {
       console.error('Chat error:', error)
-      const errorMessage = {
+      const errorMessage: Message = {
         role: 'assistant', 
         content: 'Sorry, there was an error processing your request.',
         id: Date.now() + 1
