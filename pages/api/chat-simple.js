@@ -1,5 +1,6 @@
 import { generateText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
+import { prisma } from '../../lib/db'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,8 +8,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages } = req.body
+    const { messages, conversationId, title, model } = req.body
     console.log('Received messages:', messages)
+    console.log('Conversation ID:', conversationId)
+    console.log('Selected model:', model)
 
     if (!process.env.OPENROUTER_API_KEY) {
       return res.status(500).json({ error: 'OpenRouter API key not configured' })
@@ -20,8 +23,9 @@ export default async function handler(req, res) {
       apiKey: process.env.OPENROUTER_API_KEY,
     })
 
-    // Use Claude 3.5 Sonnet now that credits are available
-    const aiModel = openrouter('anthropic/claude-3-5-sonnet-20241022')
+    // Use the selected model or default to Claude 3.5 Sonnet
+    const selectedModel = model || 'anthropic/claude-3-5-sonnet-20241022'
+    const aiModel = openrouter(selectedModel)
 
     console.log('Making request to OpenRouter...')
     const result = await generateText({
@@ -32,12 +36,53 @@ export default async function handler(req, res) {
 
     console.log('Got response from OpenRouter:', result.text.substring(0, 100) + '...')
 
-    // Return response in the exact format useChat expects
+    // Handle conversation persistence
+    let currentConversationId = conversationId
+    
+    // Create new conversation if none exists
+    if (!currentConversationId && title) {
+      console.log('Creating new conversation:', title)
+      const newConversation = await prisma.conversation.create({
+        data: {
+          title,
+          projectId: null // Default to inbox
+        }
+      })
+      currentConversationId = newConversation.id
+    }
+
+    // Save the user message if we have a conversation
+    if (currentConversationId && messages.length > 0) {
+      const lastUserMessage = messages[messages.length - 1]
+      if (lastUserMessage.role === 'user') {
+        await prisma.message.create({
+          data: {
+            conversationId: currentConversationId,
+            role: 'user',
+            content: lastUserMessage.content
+          }
+        })
+      }
+    }
+
+    // Save the AI response
+    if (currentConversationId) {
+      await prisma.message.create({
+        data: {
+          conversationId: currentConversationId,
+          role: 'assistant',
+          content: result.text
+        }
+      })
+    }
+
+    // Return response in the exact format useChat expects, including conversation ID
     res.status(200).json({
       id: Date.now().toString(),
       object: 'chat.completion',
       created: Date.now(),
-      model: 'anthropic/claude-3-5-sonnet-20241022',
+      model: selectedModel,
+      conversationId: currentConversationId,
       choices: [
         {
           index: 0,
