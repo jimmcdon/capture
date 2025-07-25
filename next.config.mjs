@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove experimental config to debug API route issues
+  // Ensure proper output for Vercel deployment
+  output: 'standalone',
+  experimental: {
+    serverComponentsExternalPackages: ['@ai-sdk/openai']
+  }
 }
 
 export default nextConfig

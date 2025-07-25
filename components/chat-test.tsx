@@ -1,11 +1,53 @@
 'use client'
 
-import { useChat } from 'ai/react'
 import { useState } from 'react'
 
 export default function ChatTest() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState('anthropic/claude-3-5-sonnet-20241022')
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+    
+    const userMessage = { role: 'user', content: input, id: Date.now() }
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/chat-simple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: [...messages, userMessage].map(({ role, content }) => ({ role, content }))
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.choices && data.choices[0]) {
+        const assistantMessage = {
+          role: 'assistant',
+          content: data.choices[0].message.content,
+          id: Date.now() + 1
+        }
+        setMessages(prev => [...prev, assistantMessage])
+      }
+    } catch (error) {
+      console.error('Chat error:', error)
+      const errorMessage = {
+        role: 'assistant', 
+        content: 'Sorry, there was an error processing your request.',
+        id: Date.now() + 1
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -56,12 +98,10 @@ export default function ChatTest() {
       </div>
 
       {/* Input */}
-      <form onSubmit={(e) => {
-        handleSubmit(e, { data: { model: selectedModel } })
-      }} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
           className="flex-1 border rounded px-3 py-2"
           disabled={isLoading}
