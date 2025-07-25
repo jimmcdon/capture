@@ -1,70 +1,61 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import CaptureLayout from '../components/capture-layout'
-import WorkspaceSwitcher from '../components/workspace-switcher'
-import ProjectNavigator from '../components/project-navigator'
+import { useState, useRef, useEffect } from 'react'
+import CaptureLayout, { CaptureLayoutHandle } from '../components/capture-layout'
+import ConversationList from '../components/conversation-list'
 import ChatEnhanced from '../components/chat-enhanced'
 
-interface Workspace {
-  id: string
-  name: string
-  isActive: boolean
-}
-
 export default function Home() {
-  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null)
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
-
-  // Fetch active workspace on mount
-  useEffect(() => {
-    fetchActiveWorkspace()
-  }, [])
-
-  const fetchActiveWorkspace = async () => {
-    try {
-      const response = await fetch('/api/workspaces')
-      const workspaces = await response.json()
-      const active = workspaces.find((ws: Workspace) => ws.isActive)
-      setActiveWorkspace(active || null)
-    } catch (error) {
-      console.error('Error fetching active workspace:', error)
-    }
-  }
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const layoutRef = useRef<CaptureLayoutHandle>(null)
 
   const handleConversationSelect = (conversationId: string) => {
     setSelectedConversationId(conversationId)
+    setIsChatOpen(true)
+    layoutRef.current?.openChat()
   }
 
   const handleNewConversation = (conversationId: string, title: string) => {
     setSelectedConversationId(conversationId)
-    // Could trigger a refresh of the project navigator here
+    setIsChatOpen(true)
+    layoutRef.current?.openChat()
   }
 
-  const leftPanel = (
-    <div className="flex flex-col h-full">
-      <WorkspaceSwitcher />
-      <div className="flex-1">
-        <ProjectNavigator 
-          activeWorkspaceId={activeWorkspace?.id || null}
-          onConversationSelect={handleConversationSelect}
-          selectedConversationId={selectedConversationId}
-        />
-      </div>
-    </div>
+  const handleCreateNewConversation = () => {
+    // Clear selection to start a new conversation
+    setSelectedConversationId(null)
+    setIsChatOpen(true)
+    layoutRef.current?.openChat()
+  }
+  
+  // Effect to handle initial state
+  useEffect(() => {
+    if (!selectedConversationId && !isChatOpen) {
+      layoutRef.current?.closeChat()
+    }
+  }, [])
+  
+  const handleToggleChat = () => {
+    if (isChatOpen) {
+      setIsChatOpen(false)
+      layoutRef.current?.closeChat()
+    } else {
+      setIsChatOpen(true)
+      layoutRef.current?.openChat()
+    }
+  }
+
+  const conversationList = (
+    <ConversationList 
+      selectedConversationId={selectedConversationId}
+      onConversationSelect={handleConversationSelect}
+      onToggleChat={handleToggleChat}
+      isChatOpen={isChatOpen}
+    />
   )
 
-  const centerPanel = (
-    <div className="p-4 h-full">
-      <div className="text-center text-muted-foreground py-8">
-        <div className="text-2xl mb-2">📋</div>
-        <p className="text-sm">Conversation Details</p>
-        <p className="text-xs mt-2">Future: Links, dependencies, metadata</p>
-      </div>
-    </div>
-  )
-
-  const rightPanel = (
+  const chatInterface = (
     <ChatEnhanced 
       conversationId={selectedConversationId}
       onNewConversation={handleNewConversation}
@@ -73,9 +64,11 @@ export default function Home() {
 
   return (
     <CaptureLayout 
-      leftPanel={leftPanel}
-      centerPanel={centerPanel}
-      rightPanel={rightPanel}
+      ref={layoutRef}
+      conversationList={conversationList}
+      chatInterface={chatInterface}
+      onNewConversation={handleCreateNewConversation}
+      isChatOpen={isChatOpen}
     />
   )
 }

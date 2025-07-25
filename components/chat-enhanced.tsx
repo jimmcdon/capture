@@ -201,86 +201,143 @@ export default function ChatEnhanced({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-card">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-medium">
-              {conversationTitle || 'New Conversation'}
-            </h2>
-            <div className="text-sm text-muted-foreground">
-              Model: {selectedModel.split('/').pop()}
+      <div className="flex-shrink-0 p-6 border-b border-border bg-card">
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-primary text-sm">💬</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg font-semibold text-foreground truncate">
+                  {conversationTitle || 'New Conversation'}
+                </h1>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>Model: {selectedModel.split('/').pop()}</span>
+              <span>•</span>
+              <span>{new Date().toLocaleDateString()}</span>
+              {conversationId && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-success rounded-full"></div>
+                    Active
+                  </span>
+                </>
+              )}
             </div>
           </div>
           
-          {/* Model Selection */}
-          <select 
-            value={selectedModel} 
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="px-3 py-1 text-sm border border-input rounded-md bg-background"
-          >
-            <option value="anthropic/claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-            <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
-            <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
-            <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
-          </select>
+          {/* Actions */}
+          <div className="flex items-center gap-2 ml-4">
+            <select 
+              value={selectedModel} 
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-input rounded-lg bg-background hover:bg-accent transition-colors"
+            >
+              <option value="anthropic/claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+              <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+              <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
+              <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+            </select>
+            
+            <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+              <span className="text-lg">⋯</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
-            <div className="text-lg mb-2">💭</div>
-            <p>Start a conversation to capture your thoughts...</p>
-            <p className="text-sm mt-2">Use voice input or type your message below</p>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">💭</span>
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">Start a new conversation</h3>
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+              Capture your thoughts, create diagrams, or analyze web content with AI assistance.
+            </p>
             
-            <div className="mt-6 text-xs space-y-2">
-              <p className="font-medium">Try these commands:</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <code className="bg-muted px-2 py-1 rounded text-xs">Create a flowchart for...</code>
-                <code className="bg-muted px-2 py-1 rounded text-xs">Draw a mindmap of...</code>
-                <code className="bg-muted px-2 py-1 rounded text-xs">Show me a diagram of...</code>
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-foreground">Try these prompts:</p>
+              <div className="flex flex-wrap gap-2 justify-center max-w-md mx-auto">
+                <span className="bg-muted px-3 py-1.5 rounded-lg text-sm text-muted-foreground">Create a flowchart for...</span>
+                <span className="bg-muted px-3 py-1.5 rounded-lg text-sm text-muted-foreground">Draw a mindmap of...</span>
+                <span className="bg-muted px-3 py-1.5 rounded-lg text-sm text-muted-foreground">Analyze this URL...</span>
               </div>
             </div>
           </div>
         )}
         
         {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[90%] rounded-lg ${
+          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} group`}>
+            <div className={`max-w-[85%] ${
               message.role === 'user' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-muted text-muted-foreground border border-border'
+                ? 'bg-primary text-primary-foreground rounded-2xl shadow-sm' 
+                : 'bg-card border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200'
             }`}>
-              <div className="px-4 pt-2">
-                <div className="text-xs font-medium mb-1 opacity-70">
-                  {message.role === 'user' ? 'You' : 'Assistant'}
+              {/* Message header with avatar */}
+              <div className="flex items-start gap-3 px-4 pt-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs ${
+                  message.role === 'user'
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {message.role === 'user' ? '👤' : '🤖'}
                 </div>
-                
-                {/* Regular message content */}
-                <div className="whitespace-pre-wrap pb-2">
-                  {message.content}
+                <div className="flex-1 min-w-0">
+                  <div className={`text-xs font-medium mb-2 ${
+                    message.role === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                  }`}>
+                    {message.role === 'user' ? 'You' : 'Assistant'}
+                  </div>
+                  
+                  {/* Regular message content */}
+                  <div className={`whitespace-pre-wrap text-sm leading-relaxed ${
+                    message.role === 'user' ? 'text-primary-foreground' : 'text-foreground'
+                  }`}>
+                    {message.content}
+                  </div>
                 </div>
               </div>
               
               {/* Mermaid diagram if present */}
               {message.mermaidCode && (
-                <div className="px-4 pb-4">
-                  <MermaidDiagram chart={message.mermaidCode} />
+                <div className="px-4 pb-4 mt-3">
+                  <div className="border-t border-border/30 pt-3">
+                    <MermaidDiagram chart={message.mermaidCode} />
+                  </div>
                 </div>
               )}
+              
+              {/* Bottom padding */}
+              <div className="pb-3"></div>
             </div>
           </div>
         ))}
         
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-muted text-muted-foreground border border-border rounded-lg px-4 py-2 max-w-[80%]">
-              <div className="text-xs font-medium mb-1 opacity-70">Assistant</div>
-              <div className="flex items-center gap-1">
-                <div className="animate-bounce">●</div>
-                <div className="animate-bounce" style={{animationDelay: '0.1s'}}>●</div>
-                <div className="animate-bounce" style={{animationDelay: '0.2s'}}>●</div>
+          <div className="flex justify-start group">
+            <div className="bg-card border border-border/50 rounded-2xl shadow-sm max-w-[80%]">
+              <div className="flex items-start gap-3 px-4 pt-3 pb-3">
+                <div className="w-6 h-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center flex-shrink-0 text-xs">
+                  🤖
+                </div>
+                <div className="flex-1">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">
+                    Assistant
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -288,34 +345,88 @@ export default function ChatEnhanced({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-border bg-card">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Capture your thoughts..."
-            className="flex-1 px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-            disabled={isLoading}
-          />
+      <div className="flex-shrink-0 p-6 border-t border-border/50 bg-card">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Input container with shadow */}
+          <div className="relative bg-background border border-border/50 rounded-2xl shadow-sm hover:shadow-md focus-within:shadow-md focus-within:ring-2 focus-within:ring-ring/20 focus-within:border-ring/30 transition-all duration-200">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message Capture..."
+              rows={1}
+              className="w-full px-4 py-4 bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground text-sm leading-relaxed"
+              disabled={isLoading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSubmit(e)
+                }
+              }}
+              style={{
+                minHeight: '48px',
+                maxHeight: '120px'
+              }}
+            />
+            
+            {/* Input actions bar */}
+            <div className="flex items-center justify-between px-4 pb-3">
+              <div className="flex items-center gap-2">
+                {speechSupported && (
+                  <button
+                    type="button"
+                    onClick={startListening}
+                    disabled={isLoading || isListening}
+                    className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg disabled:opacity-50 transition-colors"
+                    title="Voice input"
+                  >
+                    <span className="text-base">🎤</span>
+                  </button>
+                )}
+                
+                <button
+                  type="button"
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-colors"
+                  title="Attach file"
+                >
+                  <span className="text-base">📎</span>
+                </button>
+              </div>
+              
+              <button 
+                type="submit" 
+                disabled={isLoading || !input.trim()}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 border border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                    Sending
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span>Send</span>
+                    <span className="text-xs opacity-70">⏎</span>
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
           
-          {speechSupported && (
-            <button
-              type="button"
-              onClick={startListening}
-              disabled={isLoading || isListening}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 disabled:opacity-50 transition-colors"
-            >
-              🎤
-            </button>
-          )}
-          
-          <button 
-            type="submit" 
-            disabled={isLoading || !input.trim()}
-            className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
-          >
-            Send
-          </button>
+          {/* Status bar */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+            <div className="flex items-center gap-3">
+              <span>Model: {selectedModel.split('/').pop()}</span>
+              {conversationId && (
+                <span className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  Auto-saved
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Press ⇧↵ for new line
+            </div>
+          </div>
         </form>
       </div>
 
