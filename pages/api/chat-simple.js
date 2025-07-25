@@ -8,10 +8,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages, conversationId, title, model } = req.body
+    const { messages, conversationId, title, model, isDiagramRequest } = req.body
     console.log('Received messages:', messages)
     console.log('Conversation ID:', conversationId)
     console.log('Selected model:', model)
+    console.log('Is diagram request:', isDiagramRequest)
 
     if (!process.env.OPENROUTER_API_KEY) {
       return res.status(500).json({ error: 'OpenRouter API key not configured' })
@@ -27,11 +28,33 @@ export default async function handler(req, res) {
     const selectedModel = model || 'anthropic/claude-3-5-sonnet-20241022'
     const aiModel = openrouter(selectedModel)
 
+    // Create system prompt based on request type
+    let systemPrompt = `You are a helpful AI assistant for Capture, a personal knowledge management app. Help users organize their thoughts and ideas.`
+    
+    if (isDiagramRequest) {
+      systemPrompt = `You are a diagram generation specialist for Capture, a personal knowledge management app. 
+
+When users request diagrams, charts, or visualizations:
+1. Generate clean, well-structured Mermaid.js syntax
+2. Always wrap your Mermaid code in \`\`\`mermaid code blocks
+3. Choose the most appropriate diagram type (flowchart, mindmap, sequence, class, gantt)
+4. Make diagrams clear, readable, and properly structured
+5. Include a brief explanation of the diagram after the code
+
+For flowcharts: Use flowchart TD or LR syntax
+For mindmaps: Use mindmap syntax  
+For sequence diagrams: Use sequenceDiagram syntax
+For class diagrams: Use classDiagram syntax
+For project timelines: Use gantt syntax
+
+Focus on creating visually clear and informative diagrams that help users understand and organize their ideas better.`
+    }
+
     console.log('Making request to OpenRouter...')
     const result = await generateText({
       model: aiModel,
       messages,
-      system: `You are a helpful AI assistant for Capture, a personal knowledge management app. Help users organize their thoughts and ideas.`,
+      system: systemPrompt,
     })
 
     console.log('Got response from OpenRouter:', result.text.substring(0, 100) + '...')
