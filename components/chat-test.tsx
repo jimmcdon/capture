@@ -2,13 +2,19 @@
 
 import { useState } from 'react'
 
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+  id: number
+}
+
 export default function ChatTest() {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState('anthropic/claude-3-5-sonnet-20241022')
   
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
     
